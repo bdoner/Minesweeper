@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="Externals.DllImports.cs" />
     <Compile Include="Externals.Structs.cs" />
+    <Compile Include="PixelFilter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
