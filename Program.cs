@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using static Minesweeper.Externals;
@@ -11,18 +13,26 @@ namespace Minesweeper
     {
         static void Main(string[] args)
         {
-            IntPtr gameWindow = FindWindow(default(string), "Minesweeper");
-            if (gameWindow == IntPtr.Zero) Environment.Exit(1);
+            var winmine = System.Diagnostics.Process.GetProcessesByName("Winmine__XP");
+            if (winmine.Length == 0)
+            {
+                Console.WriteLine("\"Winmine__XP.exe\" not found running. Please run a game of Minesweeper and try again.");
+                Console.ReadKey();
+                Environment.Exit(1);
+            }
 
+            IntPtr gameWindow = winmine[0].MainWindowHandle;
             HandleRef gameWindowHandle = new HandleRef(default(object), gameWindow);
             //Get window
+
+            var topSuccess = SetForegroundWindow(gameWindow);
+            //SetWindowPos(gameWindow, (IntPtr)0, 0, 0, 600, 600, SetWindowPosFlags.IgnoreMove | SetWindowPosFlags.IgnoreZOrder);
+            //Bring to top
 
             var rect = new RECT();
             var rectSuccess = GetWindowRect(new HandleRef(default(object), gameWindow), out rect);
             //Get window size
 
-            var topSuccess = SetForegroundWindow(gameWindow);// SetWindowPos(gameWindow, (IntPtr)0, 0, 0, 0, 0, SetWindowPosFlags.IgnoreMove | SetWindowPosFlags.IgnoreResize | SetWindowPosFlags.ShowWindow);
-            //Bring to top
 
             var windowPicture = new Bitmap(rect.Right - rect.Left, rect.Bottom - rect.Top);
             using (var g = Graphics.FromImage(windowPicture))
@@ -33,103 +43,34 @@ namespace Minesweeper
             windowPicture.Save("ms.bmp");
             //Grab picture
 
-            int borderCount = 0;
-            var borderFilter = new PixelFilter
+            var cells = new List<Cell>();
+            int matchCount = 0;
+            int imageWidth = rect.Right - rect.Left;
+            int imageHeight = rect.Bottom - rect.Top;
+            using (var g2 = Graphics.FromImage(windowPicture))
             {
-                Threshold = 32,
-                Filter = new List<Pixel>
+                for (var y = 0; y < imageHeight; y++)
                 {
-                    //Above
-                    new Pixel
+                    for (var x = 0; x < imageWidth; x++)
                     {
-                        ColorVal = 0x06,
-                        RelX = -1,
-                        RelY = -1
-                    },
-                    new Pixel
-                    {
-                        ColorVal = 0x0f,
-                        RelX = 0,
-                        RelY = -1
-                    },
-                    new Pixel
-                    {
-                        ColorVal = 0x0e,
-                        RelX = 1,
-                        RelY = -1
-                    },
-
-                    //Same row
-                    new Pixel
-                    {
-                        ColorVal = 0x0c,
-                        RelX = -1,
-                        RelY = 0
-                    },
-                    //new Pixel
-                    //{
-                    //    ColorVal = 0x64,
-                    //    RelX = 0,
-                    //    RelY = 0
-                    //},
-                    //new Pixel
-                    //{
-                    //    ColorVal = 0x7a,
-                    //    RelX = 1,
-                    //    RelY = 0
-                    //},
-
-                    //Below
-                    new Pixel
-                    {
-                        ColorVal = 0x0e,
-                        RelX = -1,
-                        RelY = 1
-                    },
-                    //new Pixel
-                    //{
-                    //    ColorVal = 0x78,
-                    //    RelX = 0,
-                    //    RelY = 1
-                    //},
-                    //new Pixel
-                    //{
-                    //    ColorVal = 0xac,
-                    //    RelX = 1,
-                    //    RelY = 1
-                    //},
-
-                    //Check opposite
-                    new Pixel
-                    {
-                        ColorVal = 0x02,
-                        RelX = 30,
-                        RelY = 30
+                        if (
+                            Filters.BorderFilter.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2) ||
+                            Filters.ClickedBorderFilter.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2)
+                            )
+                        {
+                            matchCount++;
+                            Console.WriteLine($"Found border at ({x}, {y})");
+                            x += Cell.CELL_SIZE;
+                            cells.Add(new Cell { X = x, Y = y });
+                        }
                     }
                 }
-            };
-
-            var g2 = Graphics.FromImage(windowPicture);
-            for (var y = 0; y < windowPicture.Height; y++)
-            {
-                for (var x = 0; x < windowPicture.Width; x++)
-                {
-                    var pixel = windowPicture.GetPixel(x, y);
-                    if (borderFilter.IsMatch(ref windowPicture, x, y))
-                    {
-                        borderCount++;
-                        Console.WriteLine($"Found border at ({x}, {y})");
-                        g2.DrawRectangle(Pens.Red, x, y, 29, 29);
-
-                        x += 25;
-                    }
-                }
+                windowPicture.Save($"ms_matches_t1-{Filters.BorderFilter.Threshold}_t2-{Filters.ClickedBorderFilter.Threshold}_m-{matchCount}.bmp");
             }
-            windowPicture.Save("ms_drawn.bmp");
-            g2.Dispose();
 
-            Console.WriteLine($"Found {borderCount} border-pixels");
-            //Get board rect
+            Console.WriteLine($"Found {matchCount} border-pixels");
+            //Get board state
+
             // - main loop
             //  picture board
             //  parse board
@@ -138,7 +79,7 @@ namespace Minesweeper
             // - Repeat main loop
 
             Console.WriteLine("Done...");
-            Thread.Sleep(5000);
+            //Thread.Sleep(5000);
             //Console.ReadLine();
         }
 
