@@ -13,6 +13,7 @@ namespace Minesweeper
     {
         static void Main(string[] args)
         {
+            var startTime = DateTime.Now;
             var winmine = System.Diagnostics.Process.GetProcessesByName("Winmine__XP");
             if (winmine.Length == 0)
             {
@@ -49,23 +50,63 @@ namespace Minesweeper
             int imageHeight = rect.Bottom - rect.Top;
             using (var g2 = Graphics.FromImage(windowPicture))
             {
-                for (var y = 0; y < imageHeight; y++)
+                for (var y = 100; y < imageHeight; y++)
                 {
                     for (var x = 0; x < imageWidth; x++)
                     {
                         if (
-                            Filters.BorderFilter.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2) ||
-                            Filters.ClickedBorderFilter.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2)
+                            Filters.Border.IsMatch(windowPicture, imageWidth, imageHeight, x, y, null) ||
+                            Filters.ClickedBorder.IsMatch(windowPicture, imageWidth, imageHeight, x, y, null)
                             )
                         {
                             matchCount++;
                             Console.WriteLine($"Found border at ({x}, {y})");
+                            var foundCell = new Cell { X = x, Y = y };
+
+                            if (Filters.UnclickedCell.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2))
+                            {
+                                foundCell.State = CellState.Unclicked;
+                            }
+                            else if (Filters.EmptyCell.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2))
+                            {
+                                foundCell.State = CellState.Empty;
+                            }
+                            else if (Filters.ValueOneCell.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2))
+                            {
+                                foundCell.State = CellState.Value;
+                                foundCell.Value = CellValue.One;
+                            }
+                            else if (Filters.ValueTwoCell.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2))
+                            {
+                                foundCell.State = CellState.Value;
+                                foundCell.Value = CellValue.Two;
+                            }
+                            else if (Filters.ValueThreeCell.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2))
+                            {
+                                foundCell.State = CellState.Value;
+                                foundCell.Value = CellValue.Three;
+                            }
+                            else if (Filters.ValueFourCell.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2))
+                            {
+                                foundCell.State = CellState.Value;
+                                foundCell.Value = CellValue.Four;
+                            }
+                            else if (Filters.FlaggedCell.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2))
+                            {
+                                foundCell.State = CellState.Flagged;
+                            }
+                            else if (Filters.UnknownCell.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2))
+                            {
+                                foundCell.State = CellState.Unknown;
+                            }
+
+                            cells.Add(foundCell);
+
                             x += Cell.CELL_SIZE;
-                            cells.Add(new Cell { X = x, Y = y });
                         }
                     }
                 }
-                windowPicture.Save($"ms_matches_t1-{Filters.BorderFilter.Threshold}_t2-{Filters.ClickedBorderFilter.Threshold}_m-{matchCount}.bmp");
+                windowPicture.Save($"ms_matches_t1-{Filters.Border.Threshold}_t2-{Filters.ClickedBorder.Threshold}_m-{matchCount}.bmp");
             }
 
             Console.WriteLine($"Found {matchCount} border-pixels");
@@ -79,7 +120,9 @@ namespace Minesweeper
             // - Repeat main loop
 
             Console.WriteLine("Done...");
-            //Thread.Sleep(5000);
+            var timeTaken = DateTime.Now - startTime;
+            Console.WriteLine($"Execution complete in {timeTaken.TotalMilliseconds}ms");
+            Thread.Sleep(5000);
             //Console.ReadLine();
         }
 

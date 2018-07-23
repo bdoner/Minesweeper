@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Cell.cs" />
     <Compile Include="Externals.DllImports.cs" />
     <Compile Include="Externals.Structs.cs" />
     <Compile Include="Filters.cs" />

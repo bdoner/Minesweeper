@@ -8,7 +8,7 @@ namespace Minesweeper
 {
     public class Filters
     {
-        public static PixelFilter BorderFilter = new PixelFilter
+        public static PixelFilter Border = new PixelFilter
         {
             Threshold = 0,
             Filter = new List<Pixel>
@@ -77,7 +77,7 @@ namespace Minesweeper
         };
 
 
-        public static PixelFilter ClickedBorderFilter = new PixelFilter
+        public static PixelFilter ClickedBorder = new PixelFilter
         {
             Threshold = 0,
             Filter = new List<Pixel>
@@ -143,6 +143,115 @@ namespace Minesweeper
 
                 }
         };
+
+        public static PixelFilter UnclickedCell = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+                {
+                    new Pixel( 0, 0, 0xffffff),
+                    new Pixel( Cell.CELL_SIZE / 2, Cell.CELL_SIZE / 2, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE-1, 0, 0x808080),
+                    new Pixel( 0, Cell.CELL_SIZE-1, 0x808080),
+                    new Pixel( Cell.CELL_SIZE-1, Cell.CELL_SIZE-1, 0x808080)
+                }
+        };
+
+        public static PixelFilter EmptyCell = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+                {
+                    new Pixel( 0, 0, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE / 2, Cell.CELL_SIZE / 2, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE-1, 0, 0xc0c0c0),
+                    new Pixel( 0, Cell.CELL_SIZE-1, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE-1, Cell.CELL_SIZE-1, 0xc0c0c0)
+                }
+        };
+
+        public static PixelFilter ValueOneCell = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+                {
+                    new Pixel( 0, 0, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE / 2, Cell.CELL_SIZE / 2, 0x0000ff),
+                    new Pixel( Cell.CELL_SIZE-1, 0, 0xc0c0c0),
+                    new Pixel( 0, Cell.CELL_SIZE-1, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE-1, Cell.CELL_SIZE-1, 0xc0c0c0)
+                }
+        };
+
+        public static PixelFilter ValueTwoCell = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+                {
+                    new Pixel( 0, 0, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE / 2, Cell.CELL_SIZE / 2, 0x008000),
+                    new Pixel( Cell.CELL_SIZE-1, 0, 0xc0c0c0),
+                    new Pixel( 0, Cell.CELL_SIZE-1, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE-1, Cell.CELL_SIZE-1, 0xc0c0c0)
+                }
+        };
+
+        public static PixelFilter ValueThreeCell = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+                {
+                    new Pixel( 0, 0, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE / 2, Cell.CELL_SIZE / 2, 0xff0000),
+                    new Pixel( Cell.CELL_SIZE-1, 0, 0xc0c0c0),
+                    new Pixel( 0, Cell.CELL_SIZE-1, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE-1, Cell.CELL_SIZE-1, 0xc0c0c0)
+                }
+        };
+
+        public static PixelFilter ValueFourCell = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+                {
+                    new Pixel( 0, 0, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE / 2, Cell.CELL_SIZE / 2, 0x000080),
+                    new Pixel( Cell.CELL_SIZE-1, 0, 0xc0c0c0),
+                    new Pixel( 0, Cell.CELL_SIZE-1, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE-1, Cell.CELL_SIZE-1, 0xc0c0c0)
+                }
+        };
+
+        public static PixelFilter FlaggedCell = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+                {
+                    new Pixel( 0, 0, 0xffffff),
+                    new Pixel( 6, 4, 0xff0000),
+                    new Pixel( 7, 9, 0x000000),
+                    new Pixel( Cell.CELL_SIZE-1, 0, 0x808080),
+                    new Pixel( 0, Cell.CELL_SIZE-1, 0x808080),
+                    new Pixel( Cell.CELL_SIZE-1, Cell.CELL_SIZE-1, 0x808080)
+                }
+        };
+
+        public static PixelFilter UnknownCell = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+                {
+                    new Pixel( 0, 0, 0xffffff),
+                    new Pixel( 4, 3, 0x000000),
+                    new Pixel( 9, 4, 0x000000),
+                    new Pixel( Cell.CELL_SIZE-1, 0, 0x808080),
+                    new Pixel( 0, Cell.CELL_SIZE-1, 0x808080),
+                    new Pixel( Cell.CELL_SIZE-1, Cell.CELL_SIZE-1, 0x808080)
+                }
+        };
+
+
+
 
 
     }
