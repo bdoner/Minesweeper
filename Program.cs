@@ -45,6 +45,7 @@ namespace Minesweeper
             //Grab picture
 
             var cells = new List<Cell>();
+
             int matchCount = 0;
             int imageWidth = rect.Right - rect.Left;
             int imageHeight = rect.Bottom - rect.Top;
@@ -61,7 +62,7 @@ namespace Minesweeper
                         {
                             matchCount++;
                             Console.WriteLine($"Found border at ({x}, {y})");
-                            var foundCell = new Cell { X = x, Y = y };
+                            var foundCell = new Cell(x, y);
 
                             if (Filters.UnclickedCell.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2))
                             {
@@ -70,6 +71,7 @@ namespace Minesweeper
                             else if (Filters.EmptyCell.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2))
                             {
                                 foundCell.State = CellState.Empty;
+                                foundCell.Value = CellValue.None;
                             }
                             else if (Filters.ValueOneCell.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2))
                             {
@@ -91,6 +93,11 @@ namespace Minesweeper
                                 foundCell.State = CellState.Value;
                                 foundCell.Value = CellValue.Four;
                             }
+                            else if (Filters.ValueFiveCell.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2))
+                            {
+                                foundCell.State = CellState.Value;
+                                foundCell.Value = CellValue.Five;
+                            }
                             else if (Filters.FlaggedCell.IsMatch(windowPicture, imageWidth, imageHeight, x, y, g2))
                             {
                                 foundCell.State = CellState.Flagged;
@@ -106,10 +113,34 @@ namespace Minesweeper
                         }
                     }
                 }
-                windowPicture.Save($"ms_matches_t1-{Filters.Border.Threshold}_t2-{Filters.ClickedBorder.Threshold}_m-{matchCount}.bmp");
+                windowPicture.Save($"ms_matches_m-{matchCount}.bmp");
             }
 
             Console.WriteLine($"Found {matchCount} border-pixels");
+
+            foreach (var cell in cells)
+            {
+                var cellPosX = rect.Left + cell.X + Cell.CELL_SIZE / 2;
+                var cellPosY = rect.Top + cell.Y + Cell.CELL_SIZE / 2;
+
+                SetCursorPos(cellPosX, cellPosY);
+
+                int lParam = (cellPosY << 16) + cellPosX;
+
+                var inputMouseDown = new INPUT();
+                inputMouseDown.Type = 0; /// input type mouse
+                inputMouseDown.Data.Mouse.Flags = MOUSEEVENTF_RIGHTDOWN; /// left button down
+
+                var inputMouseUp = new INPUT();
+                inputMouseUp.Type = 0; /// input type mouse
+                inputMouseUp.Data.Mouse.Flags = MOUSEEVENTF_RIGHTUP; /// left button up
+
+                var inputs = new INPUT[] { inputMouseDown, inputMouseUp };
+                SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
+                
+                Thread.Sleep(100);
+            }
+
             //Get board state
 
             // - main loop

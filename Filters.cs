@@ -222,6 +222,20 @@ namespace Minesweeper
                 }
         };
 
+        public static PixelFilter ValueFiveCell = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+                {
+                    new Pixel( 0, 0, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE / 2, Cell.CELL_SIZE / 2, 0x800000),
+                    new Pixel( Cell.CELL_SIZE-1, 0, 0xc0c0c0),
+                    new Pixel( 0, Cell.CELL_SIZE-1, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE-1, Cell.CELL_SIZE-1, 0xc0c0c0)
+                }
+        };
+
+
         public static PixelFilter FlaggedCell = new PixelFilter
         {
             Threshold = 0,
