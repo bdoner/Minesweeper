@@ -25,15 +25,25 @@ namespace Minesweeper
             var maxMoves = 10;// board.GridHeight * board.GridWidth; 
             while (board.State == BoardState.Playing && ++movesMade < maxMoves)
             {
-                Console.WriteLine(board.MakeNextMove());
+                var actionTaken = board.MakeNextMove();
+                if (actionTaken != "Took no action.") movesMade -= 2;
+
+                board.PrintLayout();
+                Console.WriteLine(actionTaken);
+
+                //Thread.Sleep(200);
             }
 
             Console.WriteLine($"Game is over. You {(movesMade == maxMoves ? "ran out of moves" : board.State.ToString())}.");
 
             var timeTaken = DateTime.Now - startTime;
-            Console.WriteLine($"Execution complete in {timeTaken.TotalMilliseconds}ms");
+            Console.WriteLine($"Execution complete in {timeTaken.TotalSeconds}s");
             //Thread.Sleep(5000);
-            Console.ReadLine();
+            Console.Write("Retry? ");
+            var key = Console.ReadKey();
+            if (key.Key == ConsoleKey.Y)
+                Main(args);
+
         }
 
     }

@@ -249,6 +249,7 @@ namespace Minesweeper
                 }
         };
 
+
         public static PixelFilter UnknownCell = new PixelFilter
         {
             Threshold = 0,
@@ -269,6 +270,9 @@ namespace Minesweeper
             Filter = new List<Pixel>
                 {
                     new Pixel( 0, 0, 0xff0000),
+                    new Pixel( 3, 3, 0x000000),
+                    new Pixel( 5, 5, 0xffffff),
+                    new Pixel( 6, 6, 0xffffff),
                     new Pixel( Cell.CELL_SIZE-1, 0, 0xff0000),
                     new Pixel( 0, Cell.CELL_SIZE-1, 0xff0000),
                     new Pixel( Cell.CELL_SIZE-1, Cell.CELL_SIZE-1, 0xff0000)

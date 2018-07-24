@@ -65,7 +65,7 @@ namespace Minesweeper
                     return false;
             }
 
-            if (false && g != null)
+            if (g != null)
             {
 
                 foreach (var f in Filter)

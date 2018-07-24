@@ -21,9 +21,9 @@ namespace Minesweeper
 
     public enum CellValue
     {
-        Unknown,
-        None,
-        One,
+        Unknown = -1,
+        None = 0,
+        One = 1,
         Two,
         Three,
         Four,
@@ -62,6 +62,16 @@ namespace Minesweeper
         public int Y { get; set; }
         public CellState State { get; set; } = CellState.Unclicked;
         public CellValue Value { get; set; } = CellValue.Unknown;
+
+        public bool IsNeighbor(Cell neighbour)
+        {
+            if (neighbour == null) return false;
+            if (this.Col == neighbour.Col && this.Row == neighbour.Row) return false;
+
+            return
+                this.Row > neighbour.Row - 1 && this.Row < neighbour.Row + 1 &&
+                this.Col > neighbour.Col - 1 && this.Row < neighbour.Row + 1;
+        }
 
         public static void ResetCounters()
         {

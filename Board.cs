@@ -46,6 +46,7 @@ namespace Minesweeper
 
         public Board()
         {
+            WindowLocation = GetWindowLocation();
             UpdateBoard();
             _rnd = new Random();
             if (Cells.Count != GridWidth * GridHeight)
@@ -54,17 +55,23 @@ namespace Minesweeper
             }
         }
 
-        private RECT GetWindowLocation()
+        public IntPtr WinmineIsProcessHandle()
         {
             var winmine = Process.GetProcessesByName("Winmine__XP");
-            if (winmine.Length == 0)
+            return winmine.Length == 1 ? winmine[0].MainWindowHandle : IntPtr.Zero;
+
+        }
+
+        private RECT GetWindowLocation()
+        {
+            var gameWindow = WinmineIsProcessHandle();
+            if (gameWindow == IntPtr.Zero)
             {
                 Console.WriteLine("\"Winmine__XP.exe\" not found running. Please run a game of Minesweeper and try again. Press any key to exit.");
                 Console.ReadKey();
                 Environment.Exit(1);
             }
 
-            IntPtr gameWindow = winmine[0].MainWindowHandle;
             HandleRef gameWindowHandle = new HandleRef(default(object), gameWindow);
             //Get window
 
@@ -129,7 +136,6 @@ namespace Minesweeper
 
         private void UpdateBoard()
         {
-            WindowLocation = GetWindowLocation();
             var boardImage = GetBoardImage(WindowLocation);
             UpdateBoard(boardImage);
             UpdateBoardState(boardImage);
@@ -240,14 +246,21 @@ namespace Minesweeper
             return Cells.SingleOrDefault(q => q.Col == gridCol && q.Row == gridRow);
         }
 
-        public bool LeftClickCell(Cell cell)
+        public bool LeftClickCell(Cell cell, CellState? newState = null)
         {
             var cellPosX = WindowLocation.Left + cell.X + Cell.CELL_SIZE / 2;
             var cellPosY = WindowLocation.Top + cell.Y + Cell.CELL_SIZE / 2;
 
-            return
+            var clickRes =
                 SendClick(cellPosX, cellPosY, MOUSEEVENTF_LEFTDOWN) &
                 SendClick(cellPosX, cellPosY, MOUSEEVENTF_LEFTUP);
+
+            if (newState != null)
+                cell.State = newState.Value;
+            else
+                UpdateBoard();
+
+            return clickRes;
         }
 
         public bool RightClickCell(Cell cell)
@@ -255,15 +268,20 @@ namespace Minesweeper
             var cellPosX = WindowLocation.Left + cell.X + Cell.CELL_SIZE / 2;
             var cellPosY = WindowLocation.Top + cell.Y + Cell.CELL_SIZE / 2;
 
-            return
+            var clickRes =
                 SendClick(cellPosX, cellPosY, MOUSEEVENTF_RIGHTDOWN) &
                 SendClick(cellPosX, cellPosY, MOUSEEVENTF_RIGHTUP);
+
+            //UpdateBoard();
+            cell.State = CellState.Flagged;
+            cell.Value = CellValue.None;
+
+            return clickRes;
         }
 
         private bool SendClick(int x, int y, uint button)
         {
             SetCursorPos(x, y);
-
             int lParam = (y << 16) + x;
 
             var inputMouse = new INPUT();
@@ -272,12 +290,79 @@ namespace Minesweeper
 
             var inputs = new INPUT[] { inputMouse };
             var result = SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT))) == 0;
-            Thread.Sleep(100);
+
             return result;
+        }
+
+        public void PrintLayout()
+        {
+            Console.Clear();
+            foreach (var cell in Cells)
+            {
+                Console.SetCursorPosition(cell.Col * 2, cell.Row + 1);
+                switch (cell.State)
+                {
+                    case CellState.Unclicked:
+                        Console.Write(".");
+                        break;
+                    case CellState.Empty:
+                        Console.Write(" ");
+                        break;
+                    case CellState.Flagged:
+                        Console.Write("F");
+                        break;
+                    case CellState.Unknown:
+                        Console.Write("?");
+                        break;
+                    case CellState.Value:
+                        Console.Write((int)cell.Value);
+                        break;
+                    case CellState.Bomb:
+                        Console.Write("b");
+                        break;
+                    case CellState.HitBomb:
+                        Console.Write("B");
+                        break;
+                    case CellState.WronglyFlaggedBomb:
+                        Console.Write("f");
+                        break;
+                    default:
+                        break;
+                }
+
+                Console.SetCursorPosition(0, GridHeight + 1);
+                Console.WriteLine();
+            }
+        }
+
+        private List<Cell> GetNeighborCells(Cell c)
+        {
+            var neighbors = new List<Cell>
+            {
+                GetCellAt(c.Col - 1, c.Row - 1),
+                GetCellAt(c.Col - 0, c.Row - 1),
+                GetCellAt(c.Col + 1, c.Row - 1),
+
+                GetCellAt(c.Col - 1, c.Row - 0),
+                GetCellAt(c.Col + 1, c.Row - 0),
+
+                GetCellAt(c.Col - 1, c.Row + 1),
+                GetCellAt(c.Col - 0, c.Row + 1),
+                GetCellAt(c.Col + 1, c.Row + 1),
+            };
+
+            return neighbors.Where(f => f != null).ToList();
         }
 
         public string MakeNextMove()
         {
+            if (WinmineIsProcessHandle() == IntPtr.Zero)
+            {
+                Console.WriteLine("Winmine isn't running. Exiting...");
+                Thread.Sleep(5000);
+                Environment.Exit(1);
+            }
+
             if (IsNewGame)
             {
                 var cellColToClick = _rnd.Next(1, GridWidth + 1);
@@ -285,29 +370,61 @@ namespace Minesweeper
                 var cellToClick = GetCellAt(cellColToClick, cellRowToClick);
 
                 LeftClickCell(cellToClick);
-                UpdateBoard();
 
                 return $"New game. Clicked a random cell at ({cellColToClick}, {cellRowToClick})";
             }
-            else if(!Cells.Any(q => q.State == CellState.Empty))
+            else if (!Cells.Any(q => q.State == CellState.Empty))
             {
                 var cellColToClick = _rnd.Next(1, GridWidth + 1);
                 var cellRowToClick = _rnd.Next(1, GridHeight + 1);
                 var cellToClick = GetCellAt(cellColToClick, cellRowToClick);
 
                 LeftClickCell(cellToClick);
-                UpdateBoard();
 
                 return $"No empty cells yet. Clicked a random cell at ({cellColToClick}, {cellRowToClick})";
             }
-            else
-            {
 
+            var unknownCells = Cells.Where(q => q.State == CellState.Unknown).ToList();
+            foreach (var cell in unknownCells)
+            {
+                RightClickCell(cell);
+                UpdateBoard();
             }
-            // find mine cells
-            // mark mines cells
-            // find safe cells
-            // click safe cells
+
+
+            foreach (var cell in Cells.Where(q => q.State == CellState.Value))
+            {
+                var neighbours = GetNeighborCells(cell);
+
+                var unclickedAndFlaggedNeighbours = neighbours.Where(n => n.State == CellState.Unclicked || n.State == CellState.Flagged);
+                if (unclickedAndFlaggedNeighbours.Count() == (int)cell.Value && cell.Value > CellValue.None)
+                {
+                    var unclickedNeighbours = unclickedAndFlaggedNeighbours.Where(q => q.State == CellState.Unclicked).ToList();
+                    if (unclickedNeighbours.Any())
+                    {
+                        foreach (var neighbour in unclickedNeighbours)
+                        {
+                            RightClickCell(neighbour);
+                        }
+                        return $"Cells must contain bombs. Flagged cells at [{string.Join(", ", unclickedNeighbours.Select(n => $"({n.Col}, {n.Row})"))}]";
+                    }
+                }
+
+                var flaggedNeighbours = neighbours.Where(c => c.State == CellState.Flagged).ToList();
+                if ((int)cell.Value == flaggedNeighbours.Count() && cell.Value > CellValue.None)
+                {
+                    var unclickedNeighbours = neighbours.Where(q => q.State == CellState.Unclicked).ToList();
+                    if (unclickedNeighbours.Any())
+                    {
+                        foreach (var neighbour in unclickedNeighbours)
+                        {
+                            LeftClickCell(neighbour, CellState.Value);
+                        }
+                        UpdateBoard();
+                        return $"Cells can't contain bombs. Clicked cells at [{string.Join(", ", unclickedNeighbours.Select(n => $"({n.Col}, {n.Row})"))}]";
+                    }
+                }
+            }
 
             return "Took no action.";
         }
