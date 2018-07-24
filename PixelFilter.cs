@@ -36,6 +36,8 @@ namespace Minesweeper
         public int Threshold { get; set; } = 0;
         public bool IsMatch(Bitmap bitmap, int imageWidth, int imageHeight, int sourceX, int sourceY, Graphics g = null)
         {
+            if (Filter.Count == 0) return false;
+
             foreach (var f in Filter)
             {
                 var fX = sourceX + f.RelX;
@@ -63,7 +65,7 @@ namespace Minesweeper
                     return false;
             }
 
-            if (g != null)
+            if (false && g != null)
             {
 
                 foreach (var f in Filter)

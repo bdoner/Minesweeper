@@ -13,7 +13,10 @@ namespace Minesweeper
         Empty,
         Flagged,
         Unknown,
-        Value
+        Value,
+        Bomb,
+        HitBomb,
+        WronglyFlaggedBomb
     }
 
     public enum CellValue

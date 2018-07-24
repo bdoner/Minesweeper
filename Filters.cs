@@ -76,7 +76,6 @@ namespace Minesweeper
                 }
         };
 
-
         public static PixelFilter ClickedBorder = new PixelFilter
         {
             Threshold = 0,
@@ -203,6 +202,7 @@ namespace Minesweeper
                 {
                     new Pixel( 0, 0, 0xc0c0c0),
                     new Pixel( Cell.CELL_SIZE / 2, Cell.CELL_SIZE / 2, 0xff0000),
+                    new Pixel( Cell.CELL_SIZE / 2, Cell.CELL_SIZE / 2 - 1, 0xff0000),
                     new Pixel( Cell.CELL_SIZE-1, 0, 0xc0c0c0),
                     new Pixel( 0, Cell.CELL_SIZE-1, 0xc0c0c0),
                     new Pixel( Cell.CELL_SIZE-1, Cell.CELL_SIZE-1, 0xc0c0c0)
@@ -235,7 +235,6 @@ namespace Minesweeper
                 }
         };
 
-
         public static PixelFilter FlaggedCell = new PixelFilter
         {
             Threshold = 0,
@@ -264,7 +263,92 @@ namespace Minesweeper
                 }
         };
 
+        public static PixelFilter HitBombCell = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+                {
+                    new Pixel( 0, 0, 0xff0000),
+                    new Pixel( Cell.CELL_SIZE-1, 0, 0xff0000),
+                    new Pixel( 0, Cell.CELL_SIZE-1, 0xff0000),
+                    new Pixel( Cell.CELL_SIZE-1, Cell.CELL_SIZE-1, 0xff0000)
+                }
+        };
 
+        public static PixelFilter WronglyFlaggedBombCell = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+                {
+                    new Pixel( 0, 0, 0xc0c0c0),
+                    new Pixel( 6, 5, 0xffffff),
+                    new Pixel( Cell.CELL_SIZE / 2, Cell.CELL_SIZE / 2, 0xff0000),
+                    new Pixel( Cell.CELL_SIZE-1, 0, 0xc0c0c0),
+                    new Pixel( 0, Cell.CELL_SIZE-1, 0xc0c0c0),
+                    new Pixel( Cell.CELL_SIZE-1, Cell.CELL_SIZE-1, 0xc0c0c0),
+
+                }
+        };
+
+        public static PixelFilter BombCell = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+                {
+                    new Pixel( 0, 0, 0xc0c0c0),
+                    new Pixel( 3, 3, 0x000000),
+                    new Pixel( 5, 5, 0xffffff),
+                    new Pixel( Cell.CELL_SIZE-1, Cell.CELL_SIZE-1, 0xc0c0c0)
+                }
+        };
+
+        public static PixelFilter SmileyFrame = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+            {
+                new Pixel( 0,  0, 0x808080),
+                new Pixel( 1,  1, 0xffffff),
+                new Pixel(25,  0, 0xc0c0c0),
+                new Pixel( 0, 25, 0xc0c0c0),
+                new Pixel(25, 25, 0x808080),
+
+            }
+        };
+
+        public static PixelFilter PlaySmiley = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+            {
+                new Pixel(13,  7, 0xffff00),
+                new Pixel(16, 10, 0xffff00),
+                new Pixel(17, 10, 0x000000),
+            }
+        };
+
+        public static PixelFilter WinSmiley = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+            {
+                new Pixel(13,  7, 0xffff00),
+                new Pixel(15,  9, 0xffff00),
+                new Pixel(15, 10, 0x000000),
+
+            }
+        };
+
+        public static PixelFilter LostSmiley = new PixelFilter
+        {
+            Threshold = 0,
+            Filter = new List<Pixel>
+            {
+                new Pixel(13,  7, 0xffff00),
+                new Pixel(15,  9, 0x000000),
+                new Pixel(15, 10, 0xffff00),
+            }
+        };
 
 
 
