@@ -322,8 +322,8 @@ namespace Minesweeper
             Filter = new List<Pixel>
             {
                 new Pixel(13,  7, 0xffff00),
-                new Pixel(16, 10, 0xffff00),
-                new Pixel(17, 10, 0x000000),
+                new Pixel(14, 10, 0xffff00),
+                new Pixel(15, 10, 0x000000),
             }
         };
 
@@ -349,8 +349,6 @@ namespace Minesweeper
                 new Pixel(15, 10, 0xffff00),
             }
         };
-
-
 
     }
 }

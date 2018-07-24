@@ -62,5 +62,12 @@ namespace Minesweeper
         public int Y { get; set; }
         public CellState State { get; set; } = CellState.Unclicked;
         public CellValue Value { get; set; } = CellValue.Unknown;
+
+        public static void ResetCounters()
+        {
+            _lastY = 0;
+            _lastRow = 0;
+            _lastCol = 0;
+        }
     }
 }
