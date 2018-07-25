@@ -27,6 +27,7 @@ namespace Minesweeper
         public RECT WindowLocation { get; set; }
         public List<Cell> Cells { get; set; } = new List<Cell>();
         public bool IsNewGame { get { return Cells.All(c => c.State == CellState.Unclicked); } }
+        public int Bombs { get; set; }
 
         public int GridWidth
         {
@@ -44,8 +45,9 @@ namespace Minesweeper
             }
         }
 
-        public Board()
+        public Board(int bombs)
         {
+            Bombs = bombs;
             WindowLocation = GetWindowLocation();
             UpdateBoard();
             _rnd = new Random();
@@ -153,97 +155,98 @@ namespace Minesweeper
             int imageHeight = image.Height;
             //using (var g2 = Graphics.FromImage(image))
             //{
-                Graphics g2 = null;
-                for (var y = 100; y < imageHeight; y++)
+            Graphics g2 = null;
+            for (var y = 100; y < imageHeight; y++)
+            {
+                for (var x = 0; x < imageWidth; x++)
                 {
-                    for (var x = 0; x < imageWidth; x++)
+                    if (
+                        Filters.Border.IsMatch(image, imageWidth, imageHeight, x, y, null) ||
+                        Filters.ClickedBorder.IsMatch(image, imageWidth, imageHeight, x, y, null) ||
+                        Filters.HitBombCell.IsMatch(image, imageWidth, imageHeight, x, y, null)
+                        )
                     {
-                        if (
-                            Filters.Border.IsMatch(image, imageWidth, imageHeight, x, y, null) ||
-                            Filters.ClickedBorder.IsMatch(image, imageWidth, imageHeight, x, y, null) ||
-                            Filters.HitBombCell.IsMatch(image, imageWidth, imageHeight, x, y, null)
-                            )
+                        matchCount++;
+                        Log($"Found border at ({x}, {y})");
+                        var foundCell = new Cell(x, y);
+
+                        if (Filters.UnclickedCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
                         {
-                            matchCount++;
-                            Log($"Found border at ({x}, {y})");
-                            var foundCell = new Cell(x, y);
-
-                            if (Filters.UnclickedCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
-                            {
-                                foundCell.State = CellState.Unclicked;
-                            }
-                            else if (Filters.EmptyCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
-                            {
-                                foundCell.State = CellState.Empty;
-                                foundCell.Value = CellValue.None;
-                            }
-                            else if (Filters.ValueOneCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
-                            {
-                                foundCell.State = CellState.Value;
-                                foundCell.Value = CellValue.One;
-                            }
-                            else if (Filters.ValueTwoCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
-                            {
-                                foundCell.State = CellState.Value;
-                                foundCell.Value = CellValue.Two;
-                            }
-                            else if (Filters.ValueThreeCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
-                            {
-                                foundCell.State = CellState.Value;
-                                foundCell.Value = CellValue.Three;
-                            }
-                            else if (Filters.ValueFourCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
-                            {
-                                foundCell.State = CellState.Value;
-                                foundCell.Value = CellValue.Four;
-                            }
-                            else if (Filters.ValueFiveCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
-                            {
-                                foundCell.State = CellState.Value;
-                                foundCell.Value = CellValue.Five;
-                            }
-                            else if (Filters.ValueSixCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
-                            {
-                                foundCell.State = CellState.Value;
-                                foundCell.Value = CellValue.Six;
-                            }
-                            else if (Filters.FlaggedCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
-                            {
-                                foundCell.State = CellState.Flagged;
-                                foundCell.Value = CellValue.None;
-                            }
-                            else if (Filters.UnknownCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
-                            {
-                                foundCell.State = CellState.Unknown;
-                            }
-                            else if (Filters.BombCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
-                            {
-                                foundCell.State = CellState.Bomb;
-                                foundCell.Value = CellValue.None;
-                                State = BoardState.Lost;
-                            }
-                            else if (Filters.HitBombCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
-                            {
-                                foundCell.State = CellState.HitBomb;
-                                foundCell.Value = CellValue.None;
-                                State = BoardState.Lost;
-                            }
-                            else if (Filters.WronglyFlaggedBombCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
-                            {
-                                foundCell.State = CellState.WronglyFlaggedBomb;
-                                foundCell.Value = CellValue.None;
-                                State = BoardState.Lost;
-                            }
-
-
-
-                            Cells.Add(foundCell);
-
-                            x += Cell.CELL_SIZE;
+                            foundCell.State = CellState.Unclicked;
                         }
+                        else if (Filters.EmptyCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                        {
+                            foundCell.State = CellState.Empty;
+                            foundCell.Value = CellValue.None;
+                        }
+                        else if (Filters.ValueOneCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                        {
+                            foundCell.State = CellState.Value;
+                            foundCell.Value = CellValue.One;
+                        }
+                        else if (Filters.ValueTwoCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                        {
+                            foundCell.State = CellState.Value;
+                            foundCell.Value = CellValue.Two;
+                        }
+                        else if (Filters.ValueThreeCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                        {
+                            foundCell.State = CellState.Value;
+                            foundCell.Value = CellValue.Three;
+                        }
+                        else if (Filters.ValueFourCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                        {
+                            foundCell.State = CellState.Value;
+                            foundCell.Value = CellValue.Four;
+                        }
+                        else if (Filters.ValueFiveCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                        {
+                            foundCell.State = CellState.Value;
+                            foundCell.Value = CellValue.Five;
+                        }
+                        else if (Filters.ValueSixCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                        {
+                            foundCell.State = CellState.Value;
+                            foundCell.Value = CellValue.Six;
+                        }
+                        else if (Filters.FlaggedCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                        {
+                            foundCell.State = CellState.Flagged;
+                            foundCell.Value = CellValue.None;
+                        }
+                        else if (Filters.UnknownCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                        {
+                            foundCell.State = CellState.Unknown;
+                        }
+                        else if (Filters.BombCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                        {
+                            foundCell.State = CellState.Bomb;
+                            foundCell.Value = CellValue.None;
+                            State = BoardState.Lost;
+                        }
+                        else if (Filters.HitBombCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                        {
+                            foundCell.State = CellState.HitBomb;
+                            foundCell.Value = CellValue.None;
+                            State = BoardState.Lost;
+                        }
+                        else if (Filters.WronglyFlaggedBombCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                        {
+                            foundCell.State = CellState.WronglyFlaggedBomb;
+                            foundCell.Value = CellValue.None;
+                            State = BoardState.Lost;
+                        }
+
+
+
+                        Cells.Add(foundCell);
+
+                        x += Cell.CELL_SIZE;
                     }
                 }
-                //image.Save($"ms_matches_m-{matchCount}.bmp");
+            }
+            Cells = Cells.Select(c => { c.Riskyness = CalculateRiskyness(c); return c; }).ToList();
+            //image.Save($"ms_matches_m-{matchCount}.bmp");
             //}
 
             Log($"Found {matchCount} border-pixels");
@@ -316,14 +319,15 @@ namespace Minesweeper
             Console.Clear();
             foreach (var cell in Cells)
             {
-                Console.SetCursorPosition(cell.Col * 2, cell.Row + 1);
+                Console.SetCursorPosition(cell.Col * 4, cell.Row);
                 switch (cell.State)
                 {
                     case CellState.Unclicked:
-                        Console.Write(".");
+                        //Console.Write(".");
+                        Console.Write(Math.Round(CalculateRiskyness(cell), 1));
                         break;
                     case CellState.Empty:
-                        Console.Write(" ");
+                        Console.Write(".");
                         break;
                     case CellState.Flagged:
                         Console.Write("F");
@@ -332,13 +336,15 @@ namespace Minesweeper
                         Console.Write("?");
                         break;
                     case CellState.Value:
-                        Console.Write((int)cell.Value);
+                        Console.Write("v");
+                        //Console.Write((int)cell.Value);
                         break;
                     case CellState.Bomb:
                         Console.Write("b");
                         break;
                     case CellState.HitBomb:
-                        Console.Write("B");
+                        Console.Write(Math.Round(CalculateRiskyness(cell), 1));
+                        //Console.Write("B");
                         break;
                     case CellState.WronglyFlaggedBomb:
                         Console.Write("f");
@@ -352,7 +358,7 @@ namespace Minesweeper
             }
         }
 
-        private List<Cell> GetNeighborCells(Cell c)
+        private List<Cell> GetNeighbourCells(Cell c)
         {
             var neighbors = new List<Cell>
             {
@@ -371,6 +377,37 @@ namespace Minesweeper
             return neighbors.Where(f => f != null).ToList();
         }
 
+        private float CalculateRiskyness(Cell c)
+        {
+            float maxRisk = 0.0F;
+            var neighbours = GetNeighbourCells(c);
+            foreach (var neighbour in neighbours)
+            {
+                var nns = GetNeighbourCells(neighbour);
+                if (neighbour.State == CellState.Value && neighbour.Value > CellValue.None)
+                {
+                    float riskyNess = 0.0F;
+
+                    var nnUnclicked = nns.Count(q => q.State == CellState.Unclicked);
+                    var nnFlagged = nns.Count(q => q.State == CellState.Flagged);
+
+                    if (nnUnclicked != 0)
+                    {
+                        riskyNess = ((float)(int)neighbour.Value - nnFlagged) / (float)nnUnclicked;
+                        if (riskyNess > maxRisk)
+                            maxRisk = riskyNess;
+                    }
+
+                }
+
+            }
+
+            if (maxRisk > 0)
+                return maxRisk;
+            else
+                return ((float)(Bombs - Cells.Count(q => q.State == CellState.Flagged)) / (float)Cells.Count(q => q.State == CellState.Unclicked));
+        }
+
         public string MakeNextMove()
         {
             if (WinmineIsProcessHandle() == IntPtr.Zero)
@@ -380,15 +417,17 @@ namespace Minesweeper
                 Environment.Exit(1);
             }
 
-            if (!Cells.Any(q => q.State == CellState.Empty))
-            {
-                var unclicked = Cells.Where(q => q.State == CellState.Unclicked).ToList();
-                var cellToClick = unclicked[_rnd.Next(0, unclicked.Count)];
-                LeftClickCell(cellToClick);
-                UpdateBoard();
 
-                return $"No empty cells yet. Clicked a random cell at ({cellToClick.Col}, {cellToClick.Row})";
-            }
+            bool tookAction = false;
+            //if (!Cells.Any(q => q.State == CellState.Empty))
+            //{
+            //    var unclicked = Cells.Where(q => q.State == CellState.Unclicked).ToList();
+            //    var cellToClick = unclicked[_rnd.Next(0, unclicked.Count)];
+            //    LeftClickCell(cellToClick);
+            //    UpdateBoard();
+
+            //    return $"No empty cells yet. Clicked a random cell at ({cellToClick.Col}, {cellToClick.Row})";
+            //}
 
             var unknownCells = Cells.Where(q => q.State == CellState.Unknown).ToList();
             foreach (var cell in unknownCells)
@@ -397,10 +436,10 @@ namespace Minesweeper
                 UpdateBoard();
             }
 
-            
+
             foreach (var cell in Cells.Where(q => q.State == CellState.Value))
             {
-                var neighbours = GetNeighborCells(cell);
+                var neighbours = GetNeighbourCells(cell);
                 var flaggedNeighbours = neighbours.Where(c => c.State == CellState.Flagged).ToList();
                 var unclickedNeighbours = neighbours.Where(c => c.State == CellState.Unclicked).ToList();
 
@@ -414,13 +453,14 @@ namespace Minesweeper
                             RightClickCell(neighbour);
                         }
                         Console.WriteLine($"Cells must contain bombs. Flagged cells at [{string.Join(", ", unclickedNeighbours.Select(n => $"({n.Col}, {n.Row})"))}]");
+                        tookAction = true;
                     }
                 }
             }
 
             foreach (var cell in Cells.Where(q => q.State == CellState.Value))
             {
-                var neighbours = GetNeighborCells(cell);
+                var neighbours = GetNeighbourCells(cell);
                 var flaggedNeighbours = neighbours.Where(c => c.State == CellState.Flagged).ToList();
                 var unclickedNeighbours = neighbours.Where(c => c.State == CellState.Unclicked).ToList();
 
@@ -430,14 +470,26 @@ namespace Minesweeper
                     MiddleClickCell(cell);
                     //UpdateBoard();
                     Console.WriteLine($"Cell neighbours can't contain any more bombs. Clicking all around ({cell.Col}, {cell.Row})");
+                    tookAction = true;
                 }
                 else if ((int)cell.Value == flaggedNeighbours.Count() && cell.Value > CellValue.None && unclickedNeighbours.Count > 0)
                 {
                     var freeCell = unclickedNeighbours.First();
                     LeftClickCell(freeCell, CellState.Value);
                     Console.WriteLine($"Cell can't contain a bomb. Clicking ({freeCell.Col}, {freeCell.Row})");
+                    tookAction = true;
                 }
             }
+
+
+            UpdateBoard();
+            if (tookAction) return "Loop repeat";
+
+
+            var leastRisk = Cells.Where(c => c.State == CellState.Unclicked).OrderBy(q => Guid.NewGuid()).OrderBy(q => q.Riskyness).First();
+            Console.WriteLine($"Selecting the least risky cell with a risk of {leastRisk.Riskyness,2}. Clicking ({leastRisk.Col}, {leastRisk.Row})");
+
+            LeftClickCell(leastRisk);
 
             UpdateBoard();
             return "Loop repeat";

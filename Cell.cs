@@ -31,7 +31,7 @@ namespace Minesweeper
         Six
     }
 
-    [DebuggerDisplay("Point=({X}, {Y}), Grid=({Col}, {Row}), State={State}, Value={Value}")]
+    [DebuggerDisplay("Point=({X}, {Y}), Grid=({Col}, {Row}), State={State}, Value={Value}, Riskyness={Riskyness}")]
     public class Cell
     {
         public Cell(int x, int y)
@@ -62,6 +62,7 @@ namespace Minesweeper
         public int Y { get; set; }
         public CellState State { get; set; } = CellState.Unclicked;
         public CellValue Value { get; set; } = CellValue.Unknown;
+        public float Riskyness { get; set; }
 
         public bool IsNeighbor(Cell neighbour)
         {

@@ -19,7 +19,10 @@ namespace Minesweeper
         static void Main(string[] args)
         {
             var startTime = DateTime.Now;
-            var board = new Board();
+            Console.Write("How many bombs does your board have?: ");
+            var bombs = int.Parse(Console.ReadLine());
+            Console.WriteLine();
+            var board = new Board(bombs);
             
             var movesMade = 0;
             var maxMoves = board.GridHeight * board.GridWidth;
@@ -30,7 +33,9 @@ namespace Minesweeper
 
                 Console.WriteLine(actionTaken);
             }
-            //board.PrintLayout();
+
+            if(board.State == BoardState.Lost)
+                board.PrintLayout();
 
             Console.WriteLine($"Game is over. You {(movesMade == maxMoves ? "ran out of moves" : board.State.ToString())}.");
 
@@ -39,6 +44,7 @@ namespace Minesweeper
             //Thread.Sleep(5000);
             Console.Write("Retry? ");
             var key = Console.ReadKey();
+            Console.WriteLine();
             if (key.Key == ConsoleKey.Y)
                 Main(args);
 
