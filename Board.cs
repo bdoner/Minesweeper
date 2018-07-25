@@ -94,7 +94,7 @@ namespace Minesweeper
                 g.CopyFromScreen(new Point(windowLocation.Left, windowLocation.Top), Point.Empty, new Size(windowLocation.Right - windowLocation.Left, windowLocation.Bottom - windowLocation.Top));
 
             }
-            boardImage.Save("ms.bmp");
+            //boardImage.Save("ms.bmp");
             //Grab picture
             return boardImage;
 
@@ -104,7 +104,7 @@ namespace Minesweeper
         {
             int imageWidth = image.Width;
             int imageHeight = image.Height;
-            using (var g2 = Graphics.FromImage(image))
+            //using (var g2 = Graphics.FromImage(image))
             {
                 for (var y = 50; y < 100; y++)
                 {
@@ -122,11 +122,11 @@ namespace Minesweeper
                                 State = BoardState.Won;
                                 return;
                             }
-                            else if (Filters.LostSmiley.IsMatch(image, imageWidth, imageHeight, x, y, null))
-                            {
-                                State = BoardState.Lost;
-                                return;
-                            }
+                            //else if (Filters.LostSmiley.IsMatch(image, imageWidth, imageHeight, x, y, null))
+                            //{
+                            //    State = BoardState.Lost;
+                            //    return;
+                            //}
 
                         }
                     }
@@ -139,6 +139,8 @@ namespace Minesweeper
             var boardImage = GetBoardImage(WindowLocation);
             UpdateBoard(boardImage);
             UpdateBoardState(boardImage);
+
+            boardImage.Dispose();
         }
 
         private void UpdateBoard(Bitmap image)
@@ -149,8 +151,9 @@ namespace Minesweeper
             int matchCount = 0;
             int imageWidth = image.Width;
             int imageHeight = image.Height;
-            using (var g2 = Graphics.FromImage(image))
-            {
+            //using (var g2 = Graphics.FromImage(image))
+            //{
+                Graphics g2 = null;
                 for (var y = 100; y < imageHeight; y++)
                 {
                     for (var x = 0; x < imageWidth; x++)
@@ -199,6 +202,11 @@ namespace Minesweeper
                                 foundCell.State = CellState.Value;
                                 foundCell.Value = CellValue.Five;
                             }
+                            else if (Filters.ValueSixCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                            {
+                                foundCell.State = CellState.Value;
+                                foundCell.Value = CellValue.Six;
+                            }
                             else if (Filters.FlaggedCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
                             {
                                 foundCell.State = CellState.Flagged;
@@ -235,8 +243,8 @@ namespace Minesweeper
                         }
                     }
                 }
-                image.Save($"ms_matches_m-{matchCount}.bmp");
-            }
+                //image.Save($"ms_matches_m-{matchCount}.bmp");
+            //}
 
             Log($"Found {matchCount} border-pixels");
         }
@@ -257,8 +265,6 @@ namespace Minesweeper
 
             if (newState != null)
                 cell.State = newState.Value;
-            else
-                UpdateBoard();
 
             return clickRes;
         }
@@ -272,7 +278,6 @@ namespace Minesweeper
                 SendClick(cellPosX, cellPosY, MOUSEEVENTF_RIGHTDOWN) &
                 SendClick(cellPosX, cellPosY, MOUSEEVENTF_RIGHTUP);
 
-            //UpdateBoard();
             cell.State = CellState.Flagged;
             cell.Value = CellValue.None;
 
@@ -375,25 +380,14 @@ namespace Minesweeper
                 Environment.Exit(1);
             }
 
-            if (IsNewGame)
+            if (!Cells.Any(q => q.State == CellState.Empty))
             {
-                var cellColToClick = _rnd.Next(1, GridWidth + 1);
-                var cellRowToClick = _rnd.Next(1, GridHeight + 1);
-                var cellToClick = GetCellAt(cellColToClick, cellRowToClick);
-
+                var unclicked = Cells.Where(q => q.State == CellState.Unclicked).ToList();
+                var cellToClick = unclicked[_rnd.Next(0, unclicked.Count)];
                 LeftClickCell(cellToClick);
+                UpdateBoard();
 
-                return $"New game. Clicked a random cell at ({cellColToClick}, {cellRowToClick})";
-            }
-            else if (!Cells.Any(q => q.State == CellState.Empty))
-            {
-                var cellColToClick = _rnd.Next(1, GridWidth + 1);
-                var cellRowToClick = _rnd.Next(1, GridHeight + 1);
-                var cellToClick = GetCellAt(cellColToClick, cellRowToClick);
-
-                LeftClickCell(cellToClick);
-
-                return $"No empty cells yet. Clicked a random cell at ({cellColToClick}, {cellRowToClick})";
+                return $"No empty cells yet. Clicked a random cell at ({cellToClick.Col}, {cellToClick.Row})";
             }
 
             var unknownCells = Cells.Where(q => q.State == CellState.Unknown).ToList();
@@ -403,7 +397,7 @@ namespace Minesweeper
                 UpdateBoard();
             }
 
-
+            
             foreach (var cell in Cells.Where(q => q.State == CellState.Value))
             {
                 var neighbours = GetNeighborCells(cell);
@@ -419,21 +413,34 @@ namespace Minesweeper
                         {
                             RightClickCell(neighbour);
                         }
-                        return $"Cells must contain bombs. Flagged cells at [{string.Join(", ", unclickedNeighbours.Select(n => $"({n.Col}, {n.Row})"))}]";
+                        Console.WriteLine($"Cells must contain bombs. Flagged cells at [{string.Join(", ", unclickedNeighbours.Select(n => $"({n.Col}, {n.Row})"))}]");
                     }
                 }
+            }
+
+            foreach (var cell in Cells.Where(q => q.State == CellState.Value))
+            {
+                var neighbours = GetNeighborCells(cell);
+                var flaggedNeighbours = neighbours.Where(c => c.State == CellState.Flagged).ToList();
+                var unclickedNeighbours = neighbours.Where(c => c.State == CellState.Unclicked).ToList();
 
                 // In a case where all possible bombs are flagged and the rest of the sourrounding cells are free
-                if ((int)cell.Value == flaggedNeighbours.Count() && cell.Value > CellValue.None && unclickedNeighbours.Any())
+                if ((int)cell.Value == flaggedNeighbours.Count() && cell.Value > CellValue.None && unclickedNeighbours.Count > 1)
                 {
                     MiddleClickCell(cell);
-                    UpdateBoard();
-                    return $"Cell neighbours can't contain any more bombs. Marking all around ({cell.Col}, {cell.Row})";
+                    //UpdateBoard();
+                    Console.WriteLine($"Cell neighbours can't contain any more bombs. Clicking all around ({cell.Col}, {cell.Row})");
+                }
+                else if ((int)cell.Value == flaggedNeighbours.Count() && cell.Value > CellValue.None && unclickedNeighbours.Count > 0)
+                {
+                    var freeCell = unclickedNeighbours.First();
+                    LeftClickCell(freeCell, CellState.Value);
+                    Console.WriteLine($"Cell can't contain a bomb. Clicking ({freeCell.Col}, {freeCell.Row})");
                 }
             }
 
             UpdateBoard();
-            return "Took no action.";
+            return "Loop repeat";
         }
     }
 }

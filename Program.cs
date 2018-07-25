@@ -20,9 +20,9 @@ namespace Minesweeper
         {
             var startTime = DateTime.Now;
             var board = new Board();
-
+            
             var movesMade = 0;
-            var maxMoves = 10;
+            var maxMoves = board.GridHeight * board.GridWidth;
             while (board.State == BoardState.Playing && ++movesMade < maxMoves)
             {
                 var actionTaken = board.MakeNextMove();
