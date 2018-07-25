@@ -245,7 +245,7 @@ namespace Minesweeper
                     }
                 }
             }
-            Cells = Cells.Select(c => { c.Riskyness = CalculateRiskyness(c); return c; }).ToList();
+            Cells = Cells.Select(c => { c.Riskyness = c.State == CellState.Unclicked ? CalculateRiskyness(c) : 9F; return c; }).ToList();
             //image.Save($"ms_matches_m-{matchCount}.bmp");
             //}
 
