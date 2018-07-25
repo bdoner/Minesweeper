@@ -22,17 +22,15 @@ namespace Minesweeper
             var board = new Board();
 
             var movesMade = 0;
-            var maxMoves = 10;// board.GridHeight * board.GridWidth; 
+            var maxMoves = 10;
             while (board.State == BoardState.Playing && ++movesMade < maxMoves)
             {
                 var actionTaken = board.MakeNextMove();
-                if (actionTaken != "Took no action.") movesMade -= 2;
+                if (actionTaken != "Took no action.") movesMade = 0;
 
-                board.PrintLayout();
                 Console.WriteLine(actionTaken);
-
-                //Thread.Sleep(200);
             }
+            //board.PrintLayout();
 
             Console.WriteLine($"Game is over. You {(movesMade == maxMoves ? "ran out of moves" : board.State.ToString())}.");
 

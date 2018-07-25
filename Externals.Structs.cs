@@ -218,6 +218,9 @@ namespace Minesweeper
         public const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
         public const uint MOUSEEVENTF_RIGHTUP = 0x0010;
 
+        public const uint MOUSEEVENTF_MIDDLEDOWN = 0x0020;
+        public const uint MOUSEEVENTF_MIDDLEUP = 0x0040;
+
         public struct INPUT
         {
             public UInt32 Type;

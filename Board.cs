@@ -279,6 +279,18 @@ namespace Minesweeper
             return clickRes;
         }
 
+        public bool MiddleClickCell(Cell cell)
+        {
+            var cellPosX = WindowLocation.Left + cell.X + Cell.CELL_SIZE / 2;
+            var cellPosY = WindowLocation.Top + cell.Y + Cell.CELL_SIZE / 2;
+
+            var clickRes =
+                SendClick(cellPosX, cellPosY, MOUSEEVENTF_MIDDLEDOWN) &
+                SendClick(cellPosX, cellPosY, MOUSEEVENTF_MIDDLEUP);
+
+            return clickRes;
+        }
+
         private bool SendClick(int x, int y, uint button)
         {
             SetCursorPos(x, y);
@@ -395,11 +407,12 @@ namespace Minesweeper
             foreach (var cell in Cells.Where(q => q.State == CellState.Value))
             {
                 var neighbours = GetNeighborCells(cell);
+                var flaggedNeighbours = neighbours.Where(c => c.State == CellState.Flagged).ToList();
+                var unclickedNeighbours = neighbours.Where(c => c.State == CellState.Unclicked).ToList();
 
-                var unclickedAndFlaggedNeighbours = neighbours.Where(n => n.State == CellState.Unclicked || n.State == CellState.Flagged);
-                if (unclickedAndFlaggedNeighbours.Count() == (int)cell.Value && cell.Value > CellValue.None)
+                // In a case where all the neighbours must be bombs
+                if (unclickedNeighbours.Count + flaggedNeighbours.Count == (int)cell.Value && cell.Value > CellValue.None)
                 {
-                    var unclickedNeighbours = unclickedAndFlaggedNeighbours.Where(q => q.State == CellState.Unclicked).ToList();
                     if (unclickedNeighbours.Any())
                     {
                         foreach (var neighbour in unclickedNeighbours)
@@ -410,22 +423,16 @@ namespace Minesweeper
                     }
                 }
 
-                var flaggedNeighbours = neighbours.Where(c => c.State == CellState.Flagged).ToList();
-                if ((int)cell.Value == flaggedNeighbours.Count() && cell.Value > CellValue.None)
+                // In a case where all possible bombs are flagged and the rest of the sourrounding cells are free
+                if ((int)cell.Value == flaggedNeighbours.Count() && cell.Value > CellValue.None && unclickedNeighbours.Any())
                 {
-                    var unclickedNeighbours = neighbours.Where(q => q.State == CellState.Unclicked).ToList();
-                    if (unclickedNeighbours.Any())
-                    {
-                        foreach (var neighbour in unclickedNeighbours)
-                        {
-                            LeftClickCell(neighbour, CellState.Value);
-                        }
-                        UpdateBoard();
-                        return $"Cells can't contain bombs. Clicked cells at [{string.Join(", ", unclickedNeighbours.Select(n => $"({n.Col}, {n.Row})"))}]";
-                    }
+                    MiddleClickCell(cell);
+                    UpdateBoard();
+                    return $"Cell neighbours can't contain any more bombs. Marking all around ({cell.Col}, {cell.Row})";
                 }
             }
 
+            UpdateBoard();
             return "Took no action.";
         }
     }
