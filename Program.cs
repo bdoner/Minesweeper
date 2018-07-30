@@ -34,8 +34,8 @@ namespace Minesweeper
                 Console.WriteLine(actionTaken);
             }
 
-            if(board.State == BoardState.Lost)
-                board.PrintLayout();
+            //if(board.State == BoardState.Lost)
+                //board.PrintLayout();
 
             Console.WriteLine($"Game is over. You {(movesMade == maxMoves ? "ran out of moves" : board.State.ToString())}.");
 
