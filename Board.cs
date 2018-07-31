@@ -70,8 +70,7 @@ namespace Minesweeper
         public Board()
         {
             WindowLocation = GetWindowLocation();
-            UpdateBoardFromMemory();
-            //UpdateBoard();
+            UpdateBoard();
             _rnd = new Random();
             if (Cells.Count != GridWidth * GridHeight)
             {
@@ -184,11 +183,6 @@ namespace Minesweeper
 
         private void UpdateBoardFromMemory()
         {
-            int
-                unclicked = 0x0F,
-                unclearedBomb = 0x8F //cheat field
-                ;
-
             // board can be no larger than 30*24
             var baseAddr = new IntPtr(0x01005360);
             var size = GridHeight * 0x20; //32 bytes per row. 
@@ -198,13 +192,98 @@ namespace Minesweeper
             byte[] buffer = new byte[size];
             var success = ReadBytesFromMemory(baseAddr, ref buffer, out bytesRead);
 
-            foreach (var c in buffer)
+            Cells.Clear();
+            Cell.ResetCounters();
+
+            var consoleColor = Console.ForegroundColor;
+            for (var r = 0; r < GridHeight; r++)
             {
-                if (c == 0x10) { Console.WriteLine(); continue; }
-                Console.Write(c.ToString("X2") + " ");
+                var c = 0;
+                var row = buffer.Skip((r * 0x20) + 1).Take(GridWidth);
+                foreach (var f in row)
+                {
+                    var foundCell = new Cell((c * Cell.CELL_SIZE) + c + 14, (r * Cell.CELL_SIZE) + r + 102);
+                    c++;
+                    switch (f)
+                    {
+                        case 0x8F: //Bomb
+                        case 0x0F: //Unclicked (without a bomb)
+                            foundCell.State = CellState.Unclicked;
+                            break;
+                        case 0x40:
+                            foundCell.State = CellState.Empty;
+                            foundCell.Value = CellValue.None;
+                            break;
+                        case 0x41:
+                            foundCell.State = CellState.Value;
+                            foundCell.Value = CellValue.One;
+                            break;
+                        case 0x42:
+                            foundCell.State = CellState.Value;
+                            foundCell.Value = CellValue.Two;
+                            break;
+                        case 0x43:
+                            foundCell.State = CellState.Value;
+                            foundCell.Value = CellValue.Three;
+                            break;
+                        case 0x44:
+                            foundCell.State = CellState.Value;
+                            foundCell.Value = CellValue.Four;
+                            break;
+                        case 0x45:
+                            foundCell.State = CellState.Value;
+                            foundCell.Value = CellValue.Five;
+                            break;
+                        case 0x46:
+                            foundCell.State = CellState.Value;
+                            foundCell.Value = CellValue.Six;
+                            break;
+                        case 0x8E:
+                            foundCell.State = CellState.Flagged;
+                            foundCell.Value = CellValue.None;
+                            break;
+                        case 0x8A:
+                            foundCell.State = CellState.Bomb;
+                            foundCell.Value = CellValue.None;
+                            State = BoardState.Lost;
+                            break;
+                        case 0xCC:
+                            foundCell.State = CellState.HitBomb;
+                            foundCell.Value = CellValue.None;
+                            State = BoardState.Lost;
+                            break;
+                        default:
+                            throw new NotImplementedException(f.ToString("X2"));
+                    }
+
+
+
+                    //else if (Filters.BombCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                    //{
+                    //    foundCell.State = CellState.Bomb;
+                    //    foundCell.Value = CellValue.None;
+                    //    State = BoardState.Lost;
+                    //}
+                    //else if (Filters.HitBombCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                    //{
+                    //    foundCell.State = CellState.HitBomb;
+                    //    foundCell.Value = CellValue.None;
+                    //    State = BoardState.Lost;
+                    //}
+                    //else if (Filters.WronglyFlaggedBombCell.IsMatch(image, imageWidth, imageHeight, x, y, g2))
+                    //{
+                    //    foundCell.State = CellState.WronglyFlaggedBomb;
+                    //    foundCell.Value = CellValue.None;
+                    //    State = BoardState.Lost;
+                    //}
+
+
+
+                    Cells.Add(foundCell);
+                }
             }
 
-            Console.ReadLine();
+            Cells = Cells.Select(c => { c.Riskyness = c.State == CellState.Unclicked ? CalculateRiskyness(c) : 9F; return c; }).ToList();
 
 
         }
@@ -212,7 +291,8 @@ namespace Minesweeper
         private void UpdateBoard()
         {
             var boardImage = GetBoardImage(WindowLocation);
-            UpdateBoard(boardImage);
+            //UpdateBoard(boardImage);
+            UpdateBoardFromMemory();
             UpdateBoardState(boardImage);
 
             boardImage.Dispose();
@@ -220,6 +300,7 @@ namespace Minesweeper
 
         private void UpdateBoard(Bitmap image)
         {
+            throw new Exception("This method is old and shouldn't be used.");
             Cells.Clear();
             Cell.ResetCounters();
 
