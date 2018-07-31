@@ -305,7 +305,7 @@ namespace Minesweeper
 
         private void UpdateBoard(Bitmap image)
         {
-            //throw new Exception("This method is old and shouldn't be used.");
+            throw new Exception("This method is old and shouldn't be used.");
             Cells.Clear();
             Cell.ResetCounters();
 
