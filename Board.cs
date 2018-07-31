@@ -27,29 +27,51 @@ namespace Minesweeper
         public RECT WindowLocation { get; set; }
         public List<Cell> Cells { get; set; } = new List<Cell>();
         public bool IsNewGame { get { return Cells.All(c => c.State == CellState.Unclicked); } }
-        public int Bombs { get; set; }
 
+        private int _bombs;
+        public int Bombs
+        {
+            get
+            {
+                if (_bombs == 0)
+                {
+                    _bombs = ReadIntFromMemory(new IntPtr(0x01005330));
+                }
+                return _bombs;
+            }
+        }
+
+        private int _gridWidth;
         public int GridWidth
         {
             get
             {
-                return Cells.Max(q => q.Col);
+                if (_gridWidth == 0)
+                {
+                    _gridWidth = ReadIntFromMemory(new IntPtr(0x01005334));
+                }
+                return _gridWidth;
             }
         }
 
+        private int _gridHeight;
         public int GridHeight
         {
             get
             {
-                return Cells.Max(q => q.Row);
+                if (_gridHeight == 0)
+                {
+                    _gridHeight = ReadIntFromMemory(new IntPtr(0x01005338));
+                }
+                return _gridHeight;
             }
         }
 
-        public Board(int bombs)
+        public Board()
         {
-            Bombs = bombs;
             WindowLocation = GetWindowLocation();
-            UpdateBoard();
+            UpdateBoardFromMemory();
+            //UpdateBoard();
             _rnd = new Random();
             if (Cells.Count != GridWidth * GridHeight)
             {
@@ -57,16 +79,40 @@ namespace Minesweeper
             }
         }
 
-        public IntPtr WinmineIsProcessHandle()
+        private int ReadIntFromMemory(IntPtr addressOffset)
+        {
+            byte[] buffer = new byte[1];
+            int bytesRead;
+
+            var success = ReadBytesFromMemory(addressOffset, ref buffer, out bytesRead);
+
+            return (int)buffer[0];
+        }
+        private bool ReadBytesFromMemory(IntPtr addressOffset, ref byte[] buffer, out int bytesRead)
+        {
+            var procReadHandle = OpenProcess(ProcessAccessFlags.VirtualMemoryRead, false, WinmineProcessId());
+
+            var success = ReadProcessMemory(procReadHandle, addressOffset, buffer, buffer.Length, out bytesRead);
+            CloseHandle(procReadHandle);
+
+            return success;
+        }
+
+        public IntPtr WinmineProcessHandle()
         {
             var winmine = Process.GetProcessesByName("Winmine__XP");
             return winmine.Length == 1 ? winmine[0].MainWindowHandle : IntPtr.Zero;
+        }
 
+        public int WinmineProcessId()
+        {
+            var winmine = Process.GetProcessesByName("Winmine__XP");
+            return winmine.Length == 1 ? winmine[0].Id : 0;
         }
 
         private RECT GetWindowLocation()
         {
-            var gameWindow = WinmineIsProcessHandle();
+            var gameWindow = WinmineProcessHandle();
             if (gameWindow == IntPtr.Zero)
             {
                 Console.WriteLine("\"Winmine__XP.exe\" not found running. Please run a game of Minesweeper and try again. Press any key to exit.");
@@ -134,6 +180,33 @@ namespace Minesweeper
                     }
                 }
             }
+        }
+
+        private void UpdateBoardFromMemory()
+        {
+            int
+                unclicked = 0x0F,
+                unclearedBomb = 0x8F //cheat field
+                ;
+
+            // board can be no larger than 30*24
+            var baseAddr = new IntPtr(0x01005360);
+            var size = GridHeight * 0x20; //32 bytes per row. 
+            //Read from 01005360+1
+
+            int bytesRead;
+            byte[] buffer = new byte[size];
+            var success = ReadBytesFromMemory(baseAddr, ref buffer, out bytesRead);
+
+            foreach (var c in buffer)
+            {
+                if (c == 0x10) { Console.WriteLine(); continue; }
+                Console.Write(c.ToString("X2") + " ");
+            }
+
+            Console.ReadLine();
+
+
         }
 
         private void UpdateBoard()
@@ -410,7 +483,7 @@ namespace Minesweeper
 
         public string MakeNextMove()
         {
-            if (WinmineIsProcessHandle() == IntPtr.Zero)
+            if (WinmineProcessHandle() == IntPtr.Zero)
             {
                 Console.WriteLine("Winmine isn't running. Exiting...");
                 Thread.Sleep(5000);

@@ -19,10 +19,8 @@ namespace Minesweeper
         static void Main(string[] args)
         {
             var startTime = DateTime.Now;
-            Console.Write("How many bombs does your board have?: ");
-            var bombs = int.Parse(Console.ReadLine());
             Console.WriteLine();
-            var board = new Board(bombs);
+            var board = new Board();
             
             var movesMade = 0;
             var maxMoves = board.GridHeight * board.GridWidth;
