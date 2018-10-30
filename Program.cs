@@ -28,8 +28,7 @@ namespace Minesweeper
             {
                 var actionTaken = board.MakeNextMove();
                 if (actionTaken != "Took no action.") movesMade = 0;
-
-                Console.WriteLine(actionTaken);
+                
             }
 
             //if(board.State == BoardState.Lost)
